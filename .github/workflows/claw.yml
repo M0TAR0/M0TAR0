@@ -1,0 +1,34 @@
+name: run claw machine
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # once a day at 06:00 UTC
+  workflow_dispatch:        # adds a manual "Run workflow" button
+  push:
+    branches: [ main ]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - name: Generate claw.svg
+        run: |
+          python scripts/generate_claw.py \
+            --username ${{ github.repository_owner }} \
+            --out claw.svg \
+            --picks 6
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: run claw machine [skip ci]"
+          file_pattern: "claw.svg"
