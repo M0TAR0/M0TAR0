@@ -110,11 +110,13 @@ def choose_targets(grid, k):
 # ---------------------------------------------------------------------------
 # render
 # ---------------------------------------------------------------------------
-# Local pincer shapes (relative to the claw's tip point at 0,0), for open vs closed
-LEFT_OPEN = [(0, 0), (-10, 14), (-4, 14)]
-LEFT_CLOSED = [(0, 0), (-4, 12), (-2, 12)]
-RIGHT_OPEN = [(0, 0), (10, 14), (4, 14)]
-RIGHT_CLOSED = [(0, 0), (4, 12), (2, 12)]
+# Local pincer shapes (relative to the claw's tip point at 0,0), for open vs closed.
+# Each is a small hook/clamp silhouette (4 points) rather than a thin triangle,
+# so it reads as "gripping" the square rather than a stick figure standing on it.
+LEFT_OPEN = [(-2, -2), (-15, 3), (-15, 13), (-7, 15)]
+LEFT_CLOSED = [(-2, -2), (-7, 2), (-7, 11), (-3, 12)]
+RIGHT_OPEN = [(2, -2), (15, 3), (15, 13), (7, 15)]
+RIGHT_CLOSED = [(2, -2), (7, 2), (7, 11), (3, 12)]
 
 
 def render(grid, targets, out_path):
@@ -165,9 +167,12 @@ def render(grid, targets, out_path):
         all_waypoints.extend(wp)
 
         # the grabbed square: sits still until grabbed (idx 0-2), then exactly
-        # tracks the claw's x/y while closed (idx 3-6), then disappears (idx 7+)
+        # tracks the claw's x/y while closed (idx 3-6), then disappears (idx 7+).
+        # IMPORTANT: this list must start at global time 0.0 exactly (not wp[0][0],
+        # which is i/6 for pick i) -- SVG requires every animation's keyTimes to
+        # start at 0, otherwise the whole animation is silently invalid and ignored.
         sq = [
-            (wp[0][0], tx, ty, 1),
+            (0.0, tx, ty, 1),
             (wp[2][0], tx, ty, 1),                  # still resting, right up to grab
             (wp[3][0], wp[3][1], wp[3][2], 1),      # jumps to claw position -- grabbed
             (wp[4][0], wp[4][1], wp[4][2], 1),
@@ -281,6 +286,15 @@ def render(grid, targets, out_path):
         f'<animate attributeName="cy" values="{ys}" keyTimes="{times}" dur="{total_dur}s" '
         f'repeatCount="indefinite" calcMode="linear"/>'
         f'</circle>'
+    )
+    # small housing bracket above the pincers, for a more "mechanical claw" read
+    parts.append(
+        f'<rect x="{start_x-6:.1f}" y="{start_y-6:.1f}" width="12" height="5" rx="1.5" fill="{CLAW_COLOR}">'
+        f'<animate attributeName="x" values="{";".join(f"{x-6:.1f}" for x in [float(v) for v in xs.split(";")])}" '
+        f'keyTimes="{times}" dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
+        f'<animate attributeName="y" values="{";".join(f"{y-6:.1f}" for y in [float(v) for v in ys.split(";")])}" '
+        f'keyTimes="{times}" dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
+        f'</rect>'
     )
 
     parts.append("</svg>")
