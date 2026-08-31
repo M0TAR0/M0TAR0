@@ -90,21 +90,33 @@ def level_of(count):
 
 
 # ---------------------------------------------------------------------------
-# pick the juiciest targets: highest-activity days, spread across the grid
+# pick targets
 # ---------------------------------------------------------------------------
 def choose_targets(grid, k):
+    """Pick k targets, spread left-to-right (used only if --limit is passed)."""
     cells = []
     for r, row in enumerate(grid):
         for c, count in enumerate(row):
             cells.append((count, r, c))
     cells.sort(reverse=True)  # highest counts first
     top = cells[: k * 3]  # widen the pool a bit
-    # spread them out left-to-right instead of clumping
     top.sort(key=lambda x: x[2])
     step = max(1, len(top) // k)
     chosen = top[::step][:k]
     chosen.sort(key=lambda x: x[2])
-    return chosen  # list of (count, row, col)
+    return chosen
+
+
+def choose_all_targets(grid):
+    """Every day with at least 1 contribution, ordered from MOST to LEAST active.
+    Ties keep their original left-to-right/top-to-bottom grid order."""
+    cells = []
+    for r, row in enumerate(grid):
+        for c, count in enumerate(row):
+            if count > 0:
+                cells.append((count, r, c))
+    cells.sort(key=lambda x: -x[0])  # stable sort: descending count, ties keep grid order
+    return cells
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +140,7 @@ def render(grid, targets, out_path):
     bin_x = grid_w + DROP_X_OFFSET
     bin_y = grid_h / 2
 
-    total_dur = PICKS * PICK_DURATION
+    total_dur = max(len(targets), 1) * PICK_DURATION
     n = len(targets)
 
     def cell_xy(row, col):
@@ -307,14 +319,31 @@ def main():
     ap.add_argument("--username", default=None)
     ap.add_argument("--out", default="claw.svg")
     ap.add_argument("--mock", action="store_true")
-    ap.add_argument("--picks", type=int, default=PICKS)
+    ap.add_argument("--limit", type=int, default=0,
+                     help="grab only this many top days (spread out) instead of ALL contributions")
+    ap.add_argument("--pick-duration", type=float, default=1.1,
+                     help="seconds per pick -- lower this if you have a lot of contributions")
     args = ap.parse_args()
+
+    global PICK_DURATION
+    PICK_DURATION = args.pick_duration
 
     contributions = mock_contributions() if args.mock else fetch_contributions(args.username)
     grid = contributions_to_grid(contributions)
-    targets = choose_targets(grid, args.picks)
+
+    if args.limit:
+        targets = choose_targets(grid, args.limit)
+    else:
+        targets = choose_all_targets(grid)  # ALL contributions, most to least
+
+    if not targets:
+        print("No contributions found -- nothing to animate.")
+        targets = []
+
     render(grid, targets, args.out)
-    print(f"Wrote {args.out} -- {len(targets)} squares will be grabbed per loop")
+    total_seconds = len(targets) * PICK_DURATION
+    print(f"Wrote {args.out} -- grabbing {len(targets)} days, "
+          f"most to least active ({total_seconds:.0f}s per full loop)")
 
 
 if __name__ == "__main__":
