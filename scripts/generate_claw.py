@@ -20,7 +20,8 @@ from datetime import datetime, timedelta
 CELL = 11
 GAP = 3
 GREEN_SCALE = ["#161b22", "#3d3d3d", "#6e6e6e", "#a3a3a3", "#e6e6e6"]  # 0..4 activity levels, grayscale
-CLAW_COLOR = "#9ca3af"  # grey claw
+CLAW_COLOR = "#9ca3af"
+RAIL_COLOR = "#30363d"
 
 RAIL_Y = -30          # the claw's "resting height" above the grid
 DROP_X_OFFSET = 40    # how far right of the grid the bin sits
@@ -209,7 +210,6 @@ def render(grid, targets, out_path):
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 {content_top} {W} {H}" '
         f'width="{int(W)}" height="{int(H)}">',
-        f'<rect x="-10" y="{content_top}" width="{W}" height="{H}" fill="#0d1117"/>',
     ]
 
     # grid squares (targets get their own animated x/y/opacity, no transform needed)
@@ -240,14 +240,14 @@ def render(grid, targets, out_path):
 
     # bin graphic (static)
     parts.append(
-        f'<g stroke="#7d8590" stroke-width="2" fill="none">'
+        f'<g stroke="{CLAW_COLOR}" stroke-width="2" fill="none">'
         f'<path d="M {bin_x-14} {bin_y} L {bin_x-11} {bin_y+16} L {bin_x+11} {bin_y+16} L {bin_x+14} {bin_y} Z"/>'
         f'<line x1="{bin_x-16}" y1="{bin_y-3}" x2="{bin_x+16}" y2="{bin_y-3}"/>'
         f'</g>'
     )
 
     parts.append(f'<line x1="0" y1="{RAIL_Y-10}" x2="{grid_w}" y2="{RAIL_Y-10}" '
-                 f'stroke="#30363d" stroke-width="2" stroke-dasharray="4 3"/>')
+                 f'stroke="{RAIL_COLOR}" stroke-width="2" stroke-dasharray="4 3"/>')
 
     # ---- claw: cable, tip circle, two pincer polygons -- all direct-attribute animated ----
     times = ";".join(str(t) for t, *_ in all_waypoints)
@@ -270,7 +270,7 @@ def render(grid, targets, out_path):
     # cable: vertical line from the fixed rail down to the claw's current position
     parts.append(
         f'<line x1="{start_x:.1f}" x2="{start_x:.1f}" y1="{RAIL_Y-10}" y2="{start_y:.1f}" '
-        f'stroke="#7d8590" stroke-width="2">'
+        f'stroke="{CLAW_COLOR}" stroke-width="2">'
         f'<animate attributeName="x1" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
         f'repeatCount="indefinite" calcMode="linear"/>'
         f'<animate attributeName="x2" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
