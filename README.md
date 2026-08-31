@@ -1,7 +1,10 @@
 
-<p align="center">
-	# Hi there! 👋 \n
-	Im Romel :)
+<h1 align="center">
+	# Hi there! 👋
+</h1>
+
+<p alignt="center">
+	Im romel :)
 </p>
 
 <p align="center">
