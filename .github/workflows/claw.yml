@@ -26,9 +26,13 @@ jobs:
           python scripts/generate_claw.py \
             --username ${{ github.repository_owner }} \
             --out claw.svg \
-            --picks 6
+            --pick-duration 1.1
+
+      - name: Bust the README's image cache
+        run: |
+          sed -i -E "s/claw\.svg(\?ts=[0-9]+)?/claw.svg?ts=${{ github.run_id }}/" README.md
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: run claw machine [skip ci]"
-          file_pattern: "claw.svg"
+          file_pattern: "claw.svg README.md"
