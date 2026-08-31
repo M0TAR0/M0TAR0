@@ -36,3 +36,4 @@ jobs:
         with:
           commit_message: "chore: run claw machine [skip ci]"
           file_pattern: "claw.svg README.md"
+
