@@ -110,6 +110,13 @@ def choose_targets(grid, k):
 # ---------------------------------------------------------------------------
 # render
 # ---------------------------------------------------------------------------
+# Local pincer shapes (relative to the claw's tip point at 0,0), for open vs closed
+LEFT_OPEN = [(0, 0), (-10, 14), (-4, 14)]
+LEFT_CLOSED = [(0, 0), (-4, 12), (-2, 12)]
+RIGHT_OPEN = [(0, 0), (10, 14), (4, 14)]
+RIGHT_CLOSED = [(0, 0), (4, 12), (2, 12)]
+
+
 def render(grid, targets, out_path):
     rows = len(grid)
     cols = len(grid[0])
@@ -127,85 +134,68 @@ def render(grid, targets, out_path):
         y = GAP + row * (CELL + GAP) + CELL / 2
         return x, y
 
-    # ---- build the claw's global path across all picks ----
-    claw_times, claw_pts = [], []
-    pincer_times, pincer_vals = [], []
-    square_anims = []  # (row, col, times, dxdy_list, opacity_list)
+    # ---- build ONE unified waypoint list per pick: (time, x, y, is_closed) ----
+    # Using the same waypoints for claw position AND pincer state means every
+    # animated attribute (cable, tip, pincers, carried square) shares identical
+    # keyTimes -- simpler, and avoids any mismatched-length animation values.
+    all_waypoints = []  # list of (time, x, y, is_closed)
+    square_anims = []   # (row, col, list of (time, x, y, opacity))
 
-    prev_x, prev_y = cell_xy(*[t[1:] for t in targets][0]) if targets else (0, 0)
     prev_x, prev_y = bin_x, bin_y  # start parked at the bin
 
     for i, (count, row, col) in enumerate(targets):
         base = i / n
-        tx, ty = cell_xy(row, col)
         seg = 1 / n
+        tx, ty = cell_xy(row, col)
 
-        def gt(frac):  # local fraction -> global time
-            return base + frac * seg
+        def gt(frac):
+            return round(base + frac * seg, 5)
 
-        # claw waypoints for this pick
         wp = [
-            (gt(0.00), prev_x, prev_y),          # start where it left off
-            (gt(0.18), tx, RAIL_Y),               # travel above target
-            (gt(0.32), tx, ty),                   # descend onto target
-            (gt(0.42), tx, ty),                   # pause (about to grab)
-            (gt(0.50), tx, RAIL_Y),               # lift back up (grabbed)
-            (gt(0.68), bin_x, RAIL_Y),            # travel to bin
-            (gt(0.80), bin_x, bin_y),             # descend into bin
-            (gt(0.88), bin_x, bin_y),             # release
-            (gt(1.00), bin_x, bin_y),             # settle, ready for next pick
+            (gt(0.00), prev_x, prev_y, False),   # continue from wherever it was
+            (gt(0.18), tx, RAIL_Y, False),         # travel above target, open
+            (gt(0.32), tx, ty, False),             # descend onto target, open
+            (gt(0.42), tx, ty, True),              # CLOSE -- grab it
+            (gt(0.50), tx, RAIL_Y, True),          # lift back up, still closed
+            (gt(0.68), bin_x, RAIL_Y, True),       # travel to bin, still closed
+            (gt(0.80), bin_x, bin_y, True),        # descend into bin, still closed
+            (gt(0.88), bin_x, bin_y, False),       # OPEN -- release
+            (gt(1.00), bin_x, bin_y, False),       # settle, ready for next pick
         ]
-        for t, x, y in wp:
-            claw_times.append(round(t, 5))
-            claw_pts.append(f"{x:.1f},{y:.1f}")
+        all_waypoints.extend(wp)
 
-        # pincers: open .. closed (grab) .. open (release) .. closed(idle)
-        pw = [
-            (gt(0.00), 18),
-            (gt(0.30), 18),
-            (gt(0.42), 2),     # closed = grabbed
-            (gt(0.78), 2),
-            (gt(0.88), 18),    # open = release
-            (gt(1.00), 18),
+        # the grabbed square: sits still until grabbed (idx 0-2), then exactly
+        # tracks the claw's x/y while closed (idx 3-6), then disappears (idx 7+)
+        sq = [
+            (wp[0][0], tx, ty, 1),
+            (wp[2][0], tx, ty, 1),                  # still resting, right up to grab
+            (wp[3][0], wp[3][1], wp[3][2], 1),      # jumps to claw position -- grabbed
+            (wp[4][0], wp[4][1], wp[4][2], 1),
+            (wp[5][0], wp[5][1], wp[5][2], 1),
+            (wp[6][0], wp[6][1], wp[6][2], 1),
+            (wp[7][0], wp[7][1], wp[7][2], 0),      # released -> faded out
+            (1.0, wp[7][1], wp[7][2], 0),
         ]
-        for t, a in pw:
-            pincer_times.append(round(t, 5))
-            pincer_vals.append(str(a))
-
-        # the grabbed square: rides along with the claw from grab to release,
-        # then fades out (removed) for the rest of the loop
-        dx_start = tx - tx  # 0
-        sw = [
-            (gt(0.00), 0, 0, 1),
-            (gt(0.42), 0, 0, 1),                        # still sitting in grid
-            (gt(0.50), 0, RAIL_Y - ty, 1),               # lifted with claw
-            (gt(0.68), bin_x - tx, RAIL_Y - ty, 1),      # carried to bin
-            (gt(0.80), bin_x - tx, bin_y - ty, 1),       # lowered into bin
-            (gt(0.88), bin_x - tx, bin_y - ty, 0),       # released -> faded out
-            (1.0, bin_x - tx, bin_y - ty, 0),
-        ]
-        square_anims.append((row, col, sw))
-
+        square_anims.append((row, col, sq))
         prev_x, prev_y = bin_x, bin_y
 
-    # close the loop: last point must also exist at t=1 exactly once
-    if claw_times[-1] < 1.0:
-        claw_times.append(1.0)
-        claw_pts.append(claw_pts[-1])
-    if pincer_times[-1] < 1.0:
-        pincer_times.append(1.0)
-        pincer_vals.append(pincer_vals[-1])
+    if all_waypoints[-1][0] < 1.0:
+        t, x, y, closed = all_waypoints[-1]
+        all_waypoints.append((1.0, x, y, closed))
 
     # ---- assemble SVG ----
     W = bin_x + 40
-    H = max(grid_h, RAIL_Y * -1 + 40) + 20
+    content_bottom = max(grid_h, bin_y + 16) + 15   # tallest thing: grid rows or the bin
+    content_top = RAIL_Y - 40                          # rail + claw dock, above the grid
+    H = content_bottom - content_top
+
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{-10} {RAIL_Y - 40} {W} {H}" '
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 {content_top} {W} {H}" '
         f'width="{int(W)}" height="{int(H)}">',
-        f'<rect x="{-10}" y="{RAIL_Y - 40}" width="{W}" height="{H}" fill="#0d1117"/>',
+        f'<rect x="-10" y="{content_top}" width="{W}" height="{H}" fill="#0d1117"/>',
     ]
 
-    # grid squares
+    # grid squares (targets get their own animated x/y/opacity, no transform needed)
     square_lookup = {(r, c): anim for (r, c, anim) in square_anims}
     for r in range(rows):
         for c in range(cols):
@@ -213,26 +203,25 @@ def render(grid, targets, out_path):
             color = GREEN_SCALE[level_of(grid[r][c])]
             gx, gy = x - CELL / 2, y - CELL / 2
             if (r, c) in square_lookup:
-                sw = square_lookup[(r, c)]
-                times = ";".join(str(t) for t, *_ in sw)
-                dxs = ";".join(f"{dx:.1f}" for _, dx, dy, op in sw)
-                dys = ";".join(f"{dy:.1f}" for _, dx, dy, op in sw)
-                ops = ";".join(str(op) for *_, op in sw)
-                pair_values = ";".join(f"{a},{b}" for a, b in zip(dxs.split(";"), dys.split(";")))
+                sq = square_lookup[(r, c)]
+                times = ";".join(str(t) for t, *_ in sq)
+                xs = ";".join(f"{(px - CELL/2):.1f}" for _, px, py, op in sq)
+                ys = ";".join(f"{(py - CELL/2):.1f}" for _, px, py, op in sq)
+                ops = ";".join(str(op) for *_, op in sq)
                 parts.append(
-                    f'<g>'
-                    f'<animateTransform attributeName="transform" type="translate" '
-                    f'values="{pair_values}" '
-                    f'keyTimes="{times}" dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
                     f'<rect x="{gx:.1f}" y="{gy:.1f}" width="{CELL}" height="{CELL}" rx="2" fill="{color}">'
+                    f'<animate attributeName="x" values="{xs}" keyTimes="{times}" '
+                    f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
+                    f'<animate attributeName="y" values="{ys}" keyTimes="{times}" '
+                    f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
                     f'<animate attributeName="opacity" values="{ops}" keyTimes="{times}" '
                     f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
-                    f'</rect></g>'
+                    f'</rect>'
                 )
             else:
                 parts.append(f'<rect x="{gx:.1f}" y="{gy:.1f}" width="{CELL}" height="{CELL}" rx="2" fill="{color}"/>')
 
-    # bin graphic
+    # bin graphic (static)
     parts.append(
         f'<g stroke="#7d8590" stroke-width="2" fill="none">'
         f'<path d="M {bin_x-14} {bin_y} L {bin_x-11} {bin_y+16} L {bin_x+11} {bin_y+16} L {bin_x+14} {bin_y} Z"/>'
@@ -240,36 +229,58 @@ def render(grid, targets, out_path):
         f'</g>'
     )
 
-    # claw group: rail line (decorative) + moving assembly
-    claw_values = " ".join(claw_pts)
-    claw_keytimes = ";".join(str(t) for t in claw_times)
-    pincer_values = ";".join(pincer_vals)
-    pincer_keytimes = ";".join(str(t) for t in pincer_times)
+    parts.append(f'<line x1="0" y1="{RAIL_Y-10}" x2="{grid_w}" y2="{RAIL_Y-10}" '
+                 f'stroke="#30363d" stroke-width="2" stroke-dasharray="4 3"/>')
 
-    parts.append(f'<line x1="0" y1="{RAIL_Y-10}" x2="{grid_w}" y2="{RAIL_Y-10}" stroke="#30363d" stroke-width="2" stroke-dasharray="4 3"/>')
+    # ---- claw: cable, tip circle, two pincer polygons -- all direct-attribute animated ----
+    times = ";".join(str(t) for t, *_ in all_waypoints)
+    xs = ";".join(f"{x:.1f}" for _, x, y, c in all_waypoints)
+    ys = ";".join(f"{y:.1f}" for _, x, y, c in all_waypoints)
 
-    pincer_values_neg = ";".join(str(-int(v)) for v in pincer_vals)
+    def poly_values(local_open, local_closed):
+        frames = []
+        for t, x, y, closed in all_waypoints:
+            pts = local_closed if closed else local_open
+            frames.append(" ".join(f"{x+lx:.1f},{y+ly:.1f}" for lx, ly in pts))
+        return ";".join(frames)
 
+    left_points = poly_values(LEFT_OPEN, LEFT_CLOSED)
+    right_points = poly_values(RIGHT_OPEN, RIGHT_CLOSED)
+    start_x, start_y = all_waypoints[0][1], all_waypoints[0][2]
+    start_left = " ".join(f"{start_x+lx:.1f},{start_y+ly:.1f}" for lx, ly in LEFT_OPEN)
+    start_right = " ".join(f"{start_x+lx:.1f},{start_y+ly:.1f}" for lx, ly in RIGHT_OPEN)
+
+    # cable: vertical line from the fixed rail down to the claw's current position
     parts.append(
-        f'<g id="claw">'
-        f'<animateTransform attributeName="transform" type="translate" '
-        f'values="{claw_values}" keyTimes="{claw_keytimes}" dur="{total_dur}s" '
-        f'calcMode="linear" repeatCount="indefinite"/>'
-        f'<line x1="0" y1="{RAIL_Y-10}" x2="0" y2="0" stroke="#7d8590" stroke-width="2"/>'
-        f'<g id="pincer-left">'
-        f'<animateTransform attributeName="transform" type="rotate" '
-        f'values="{pincer_values_neg}" keyTimes="{pincer_keytimes}" '
-        f'dur="{total_dur}s" calcMode="linear" repeatCount="indefinite"/>'
-        f'<path d="M 0 0 L -10 14 L -4 14 Z" fill="#c9ccd1"/>'
-        f'</g>'
-        f'<g id="pincer-right">'
-        f'<animateTransform attributeName="transform" type="rotate" '
-        f'values="{pincer_values}" keyTimes="{pincer_keytimes}" '
-        f'dur="{total_dur}s" calcMode="linear" repeatCount="indefinite"/>'
-        f'<path d="M 0 0 L 10 14 L 4 14 Z" fill="#c9ccd1"/>'
-        f'</g>'
-        f'<circle cx="0" cy="0" r="3" fill="#c9ccd1"/>'
-        f'</g>'
+        f'<line x1="{start_x:.1f}" x2="{start_x:.1f}" y1="{RAIL_Y-10}" y2="{start_y:.1f}" '
+        f'stroke="#7d8590" stroke-width="2">'
+        f'<animate attributeName="x1" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
+        f'repeatCount="indefinite" calcMode="linear"/>'
+        f'<animate attributeName="x2" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
+        f'repeatCount="indefinite" calcMode="linear"/>'
+        f'<animate attributeName="y2" values="{ys}" keyTimes="{times}" dur="{total_dur}s" '
+        f'repeatCount="indefinite" calcMode="linear"/>'
+        f'</line>'
+    )
+    # pincers
+    parts.append(
+        f'<polygon points="{start_left}" fill="{CLAW_COLOR}">'
+        f'<animate attributeName="points" values="{left_points}" keyTimes="{times}" '
+        f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
+        f'</polygon>'
+        f'<polygon points="{start_right}" fill="{CLAW_COLOR}">'
+        f'<animate attributeName="points" values="{right_points}" keyTimes="{times}" '
+        f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
+        f'</polygon>'
+    )
+    # tip
+    parts.append(
+        f'<circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="3" fill="{CLAW_COLOR}">'
+        f'<animate attributeName="cx" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
+        f'repeatCount="indefinite" calcMode="linear"/>'
+        f'<animate attributeName="cy" values="{ys}" keyTimes="{times}" dur="{total_dur}s" '
+        f'repeatCount="indefinite" calcMode="linear"/>'
+        f'</circle>'
     )
 
     parts.append("</svg>")
