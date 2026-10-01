@@ -8,5 +8,5 @@ Im Romel :)
 </p>
 
 <p align="center">
-  <img src="claw.svg?ts=36710535740" alt="Claw machine grabbing my contributions" width="100%" />
+  <img src="claw.svg?ts=36860498550" alt="Claw machine grabbing my contributions" width="100%" />
 </p>
