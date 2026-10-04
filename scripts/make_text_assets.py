@@ -9,9 +9,10 @@ THEMES = {"dark": "#f2f2f2", "light": "#141414"}
 FONT = "'Courier New', Courier, monospace"
 os.makedirs("assets/headings", exist_ok=True)
 
-# "Who am I" and "Certifications" are plain <h2> text in the README
 HEADINGS = {
+    "who": "WHO AM I",
     "skills": "LANGUAGES & SKILLS",
+    "certs": "CERTIFICATIONS",
     "contrib": "CONTRIBUTIONS",
     "contact": "CONTACT ME",
 }

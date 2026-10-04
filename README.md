@@ -1,12 +1,14 @@
 <p align="center">
-  <img src="dancer.svg" alt="Pixel-art b-boy breakdancing" width="100%" />
+  <img src="bboy.svg" alt="Pixel-art b-boy breakdancing" width="100%" />
 </p>
 
 <p align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/typing-dark.svg" /><img src="assets/typing-light.svg" alt="Hey there, Welcome :)" /></picture>
 </p>
 
-<h2 align="center">Who am I</h2>
+<h3 align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/who-dark.svg" /><img src="assets/headings/who-light.svg" alt="Who am I" height="34" /></picture>
+</h3>
 
 <p align="center">
   I'm Romel, a Mexican computational engineering dancer 🇲🇽💃🖥️
@@ -34,7 +36,9 @@
   </tr>
 </table>
 
-<h2 align="center">Certifications</h2>
+<h3 align="center">
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/certs-dark.svg" /><img src="assets/headings/certs-light.svg" alt="Certifications" height="34" /></picture>
+</h3>
 
 <p align="center">
   <i>Coming soon... 🚧</i>

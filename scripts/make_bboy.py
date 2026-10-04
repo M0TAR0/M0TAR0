@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates dancer.svg: a black & white pixel-art b-boy breakdancing across a wide banner.
+"""Generates bboy.svg: a black & white pixel-art b-boy breakdancing across a wide banner.
 
 Usage: python3 scripts/make_bboy.py [out.svg] [--frame N]   (--frame renders one static frame)
 """
@@ -416,7 +416,7 @@ if __name__ == "__main__":
         i = args.index("--frame")
         only = int(args[i + 1])
         del args[i:i + 2]
-    out = args[0] if args else "dancer.svg"
+    out = args[0] if args else "bboy.svg"
     svg, n = build(only)
     with open(out, "w") as f:
         f.write(svg)
