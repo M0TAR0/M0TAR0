@@ -329,13 +329,18 @@ def background():
 
 
 def dust():
+    """Floating specks, stepped (not smooth) so the page repaints a few times a second instead of every frame."""
     out = []
     pts = [(14, 8, 0.0), (28, 18, 0.9), (44, 6, 1.7), (63, 14, 0.4), (80, 9, 1.3), (97, 20, 2.1), (108, 7, 0.7),
            (7, 22, 1.5), (52, 24, 2.6), (90, 26, 0.2)]
+    steps = 8
+    kt = ";".join(f"{i / steps:.3f}" for i in range(steps))
     for x, y, d in pts:
+        ys = ";".join(str(int((y - 3 * i / (steps - 1)) * S)) for i in range(steps))
+        ops = ";".join(["0", "0.3", "0.5", "0.5", "0.45", "0.3", "0.15", "0"])
         out.append(f'<rect x="{x * S}" y="{y * S}" width="{S // 2}" height="{S // 2}" fill="#fff" opacity="0">'
-                   f'<animate attributeName="opacity" dur="4s" begin="{d}s" repeatCount="indefinite" values="0;0.5;0" />'
-                   f'<animate attributeName="y" dur="4s" begin="{d}s" repeatCount="indefinite" values="{y * S};{(y - 3) * S}" />'
+                   f'<animate attributeName="opacity" dur="4s" begin="{d}s" repeatCount="indefinite" calcMode="discrete" keyTimes="{kt}" values="{ops}"/>'
+                   f'<animate attributeName="y" dur="4s" begin="{d}s" repeatCount="indefinite" calcMode="discrete" keyTimes="{kt}" values="{ys}"/>'
                    f'</rect>')
     return "".join(out)
 
@@ -393,6 +398,8 @@ def build(only=None):
         return "".join(g)
 
     o.append(f'<g transform="scale({S})">{cast()}</g>')
+    if animate:
+        o.append(dust())
     o.append(f'<rect width="{W * S}" height="{H * S}" fill="url(#scan)"/>')
     o.append(f'<rect width="{W * S}" height="{H * S}" fill="url(#vig)"/>')
     rec = f'<rect x="{3 * S}" y="{2 * S}" width="{S}" height="{S}" fill="#fff">'
