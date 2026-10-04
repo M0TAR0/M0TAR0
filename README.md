@@ -11,9 +11,9 @@
 </h3>
 
 <p align="center">
-  I'm a Mexican Computer Engineering dancer<br />
-  I study at the @UNAM<br />
-  I like gummies and mints
+  🇲🇽 I'm a Mexican Computer Engineering dancer 💃<br />
+  🎓 I study at the @UNAM<br />
+  🍬 I like gummies and mints 🍃
 </p>
 
 <h3 align="center">
@@ -22,11 +22,11 @@
 
 <table align="center">
   <tr>
-    <td rowspan="3" align="center" valign="middle"><img src="assets/pose-freeze.svg?v=1" width="140" alt="B-boy freezing in a handstand" /></td>
+    <td rowspan="3" align="center" valign="middle"><img src="assets/pose-freeze.svg?v=2" width="140" alt="B-boy freezing in a handstand" /></td>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/python-dark.svg" /><img src="assets/skills/python-light.svg" alt="Python" width="56" /></picture><br /><sub><b>Python</b></sub></td>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/java-dark.svg" /><img src="assets/skills/java-light.svg" alt="Java" width="56" /></picture><br /><sub><b>Java</b></sub></td>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/c-dark.svg" /><img src="assets/skills/c-light.svg" alt="C" width="56" /></picture><br /><sub><b>C</b></sub></td>
-    <td rowspan="3" align="center" valign="middle"><img src="assets/pose-spin.svg?v=1" width="140" alt="B-boy doing a headspin" /></td>
+    <td rowspan="3" align="center" valign="middle"><img src="assets/pose-spin.svg?v=2" width="140" alt="B-boy doing a headspin" /></td>
   </tr>
   <tr>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/cpp-dark.svg" /><img src="assets/skills/cpp-light.svg" alt="C++" width="56" /></picture><br /><sub><b>C++</b></sub></td>
