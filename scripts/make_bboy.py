@@ -393,8 +393,6 @@ def build(only=None):
         return "".join(g)
 
     o.append(f'<g transform="scale({S})">{cast()}</g>')
-    if animate:
-        o.append(dust())
     o.append(f'<rect width="{W * S}" height="{H * S}" fill="url(#scan)"/>')
     o.append(f'<rect width="{W * S}" height="{H * S}" fill="url(#vig)"/>')
     rec = f'<rect x="{3 * S}" y="{2 * S}" width="{S}" height="{S}" fill="#fff">'
@@ -407,6 +405,21 @@ def build(only=None):
     return "\n".join(o), n
 
 
+def build_sprite(move, loops=1, n=8, dur=1.0, w=30):
+    """Small transparent sprite of one pose: the b-boy repeating `move` in place."""
+    rx = w / 2
+    o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w * S} {H * S}" width="{w * S}" height="{H * S}" '
+         f'shape-rendering="crispEdges">',
+         f'<ellipse cx="{w * S // 2}" cy="{(GY + 1) * S}" rx="{9 * S}" ry="{S}" fill="#888" opacity="0.28"/>',
+         f'<g transform="scale({S})">']
+    for i in range(n):
+        P = render_sk(move(rx, loops * i / n))
+        vis = "visible" if i == 0 else "hidden"
+        o.append(f'<g visibility="{vis}">{to_paths(P, 1)}{vis_anim(i, n, dur)}</g>')
+    o.append('</g></svg>')
+    return "\n".join(o)
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     only = None
@@ -415,6 +428,12 @@ if __name__ == "__main__":
         only = int(args[i + 1])
         del args[i:i + 2]
     out = args[0] if args else "bboy.svg"
+    if "--sprites" in args:
+        for name, move in (("freeze", freeze), ("spin", headspin)):
+            with open(f"assets/pose-{name}.svg", "w") as f:
+                f.write(build_sprite(move))
+            print("assets/pose-" + name + ".svg")
+        sys.exit(0)
     svg, n = build(only)
     with open(out, "w") as f:
         f.write(svg)

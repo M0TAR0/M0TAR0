@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="bboy.svg?v=2" alt="Pixel-art b-boy breakdancing" width="100%" />
+  <img src="bboy.svg?v=3" alt="Pixel-art b-boy breakdancing" width="100%" />
 </p>
 
 <p align="center">
@@ -7,11 +7,13 @@
 </p>
 
 <h3 align="center">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/who-dark.svg" /><img src="assets/headings/who-light.svg" alt="I'm Romel" height="34" /></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/who-dark.svg" /><img src="assets/headings/who-light.svg" alt="I'm Romel:" height="34" /></picture>
 </h3>
 
 <p align="center">
-  A Mexican computational engineering dancer 🇲🇽💃🖥️
+  I'm a Mexican Computer Engineering dancer<br />
+  I study at the @UNAM<br />
+  I like gummies and mints
 </p>
 
 <h3 align="center">
@@ -20,9 +22,11 @@
 
 <table align="center">
   <tr>
+    <td rowspan="3" align="center" valign="middle"><img src="assets/pose-freeze.svg?v=1" width="140" alt="B-boy freezing in a handstand" /></td>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/python-dark.svg" /><img src="assets/skills/python-light.svg" alt="Python" width="56" /></picture><br /><sub><b>Python</b></sub></td>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/java-dark.svg" /><img src="assets/skills/java-light.svg" alt="Java" width="56" /></picture><br /><sub><b>Java</b></sub></td>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/c-dark.svg" /><img src="assets/skills/c-light.svg" alt="C" width="56" /></picture><br /><sub><b>C</b></sub></td>
+    <td rowspan="3" align="center" valign="middle"><img src="assets/pose-spin.svg?v=1" width="140" alt="B-boy doing a headspin" /></td>
   </tr>
   <tr>
     <td align="center" width="140"><picture><source media="(prefers-color-scheme: dark)" srcset="assets/skills/cpp-dark.svg" /><img src="assets/skills/cpp-light.svg" alt="C++" width="56" /></picture><br /><sub><b>C++</b></sub></td>
