@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="bboy.svg" alt="Pixel-art b-boy breakdancing" width="100%" />
+  <img src="bboy.svg?v=2" alt="Pixel-art b-boy breakdancing" width="100%" />
 </p>
 
 <p align="center">
@@ -7,11 +7,11 @@
 </p>
 
 <h3 align="center">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/who-dark.svg" /><img src="assets/headings/who-light.svg" alt="Who am I" height="34" /></picture>
+  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/who-dark.svg" /><img src="assets/headings/who-light.svg" alt="I'm Romel" height="34" /></picture>
 </h3>
 
 <p align="center">
-  I'm Romel, a Mexican computational engineering dancer 🇲🇽💃🖥️
+  A Mexican computational engineering dancer 🇲🇽💃🖥️
 </p>
 
 <h3 align="center">

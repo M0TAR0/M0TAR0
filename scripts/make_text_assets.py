@@ -10,7 +10,7 @@ FONT = "'Courier New', Courier, monospace"
 os.makedirs("assets/headings", exist_ok=True)
 
 HEADINGS = {
-    "who": "WHO AM I",
+    "who": "I'M ROMEL",
     "skills": "LANGUAGES & SKILLS",
     "certs": "CERTIFICATIONS",
     "contrib": "CONTRIBUTIONS",

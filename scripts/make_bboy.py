@@ -47,7 +47,7 @@ def paint(P, cells, outline=True):
     P.update(cells)
 
 
-def to_paths(P):
+def to_paths(P, k=S):
     by_color = {}
     for (x, y), c in P.items():
         by_color.setdefault(c, {}).setdefault(y, []).append(x)
@@ -61,7 +61,7 @@ def to_paths(P):
                 if x is not None and x == prev + 1:
                     prev = x
                     continue
-                d.append(f"M{start * S} {y * S}h{(prev - start + 1) * S}v{S}h-{(prev - start + 1) * S}z")
+                d.append(f"M{start * k} {y * k}h{(prev - start + 1) * k}v{k}h-{(prev - start + 1) * k}z")
                 if x is not None:
                     start = prev = x
         out.append(f'<path fill="{c}" d="{"".join(d)}"/>')
@@ -388,13 +388,11 @@ def build(only=None):
                 continue
             P = render_sk(sk)
             # shift joints are absolute already (x baked in); render at the frame's own x
-            g.append(f'<g visibility="{"visible" if (not animate or i == 0) else "hidden"}">{to_paths(P)}'
+            g.append(f'<g visibility="{"visible" if (not animate or i == 0) else "hidden"}">{to_paths(P, 1)}'
                      f'{vis_anim(i, n, dur) if animate else ""}</g>')
         return "".join(g)
 
-    body = cast()
-    o.append(f'<g transform="translate(0,{(2 * (GY + 1)) * S}) scale(1,-1)" opacity="0.14">{body}</g>')
-    o.append(f'<g>{body}</g>')
+    o.append(f'<g transform="scale({S})">{cast()}</g>')
     if animate:
         o.append(dust())
     o.append(f'<rect width="{W * S}" height="{H * S}" fill="url(#scan)"/>')
