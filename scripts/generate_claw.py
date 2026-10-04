@@ -19,9 +19,10 @@ from datetime import datetime, timedelta
 
 CELL = 11
 GAP = 3
-GREEN_SCALE = ["#161b22", "#3d3d3d", "#6e6e6e", "#a3a3a3", "#e6e6e6"]  # 0..4 activity levels, grayscale
-CLAW_COLOR = "#9ca3af"
-RAIL_COLOR = "#30363d"
+GREEN_SCALE = ["#2b2b2b", "#555555", "#7d7d7d", "#a6a6a6", "#d4d4d4"]  # 0..4 activity levels, neutral grayscale
+CLAW_COLOR = "#9a9a9a"
+RAIL_COLOR = "#6a6a6a"
+
 
 RAIL_Y = -30          # the claw's "resting height" above the grid
 DROP_X_OFFSET = 40    # how far right of the grid the bin sits
