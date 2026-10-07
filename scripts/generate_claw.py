@@ -124,13 +124,15 @@ def choose_all_targets(grid):
 # ---------------------------------------------------------------------------
 # render
 # ---------------------------------------------------------------------------
-# Local pincer shapes (relative to the claw's tip point at 0,0), for open vs closed.
-# Each is a small hook/clamp silhouette (4 points) rather than a thin triangle,
-# so it reads as "gripping" the square rather than a stick figure standing on it.
-LEFT_OPEN = [(-2, -2), (-15, 3), (-15, 13), (-7, 15)]
-LEFT_CLOSED = [(-2, -2), (-7, 2), (-7, 11), (-3, 12)]
-RIGHT_OPEN = [(2, -2), (15, 3), (15, 13), (7, 15)]
-RIGHT_CLOSED = [(2, -2), (7, 2), (7, 11), (3, 12)]
+# Pixel-art claw: every shape is made of U x U blocks. Pincer cells are (col, row) offsets
+# from the tip, in blocks. Open and closed poses have the same number of cells so each block
+# can animate between them with the shared keyTimes.
+U = 4
+LEFT_OPEN = [(-1, -1), (-2, 0), (-3, 0), (-4, 1), (-5, 2), (-5, 3), (-5, 4), (-4, 4)]
+LEFT_CLOSED = [(-1, -1), (-2, 0), (-2, 1), (-2, 2), (-2, 3), (-2, 4), (-1, 4), (-3, 4)]
+RIGHT_OPEN = [(-x, y) for x, y in LEFT_OPEN]
+RIGHT_CLOSED = [(-x, y) for x, y in LEFT_CLOSED]
+HOUSING = [(-2, -3), (-1, -3), (0, -3), (1, -3), (-1, -2), (0, -2)]   # box above the pincers
 
 
 def render(grid, targets, out_path):
@@ -210,7 +212,7 @@ def render(grid, targets, out_path):
 
     parts = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 {content_top} {W} {H}" '
-        f'width="{int(W)}" height="{int(H)}">',
+        f'width="{int(W)}" height="{int(H)}" shape-rendering="crispEdges">',
     ]
 
     # grid squares (targets get their own animated x/y/opacity, no transform needed)
@@ -227,7 +229,7 @@ def render(grid, targets, out_path):
                 ys = ";".join(f"{(py - CELL/2):.1f}" for _, px, py, op in sq)
                 ops = ";".join(str(op) for *_, op in sq)
                 parts.append(
-                    f'<rect x="{gx:.1f}" y="{gy:.1f}" width="{CELL}" height="{CELL}" rx="2" fill="{color}">'
+                    f'<rect x="{gx:.1f}" y="{gy:.1f}" width="{CELL}" height="{CELL}" fill="{color}">'
                     f'<animate attributeName="x" values="{xs}" keyTimes="{times}" '
                     f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
                     f'<animate attributeName="y" values="{ys}" keyTimes="{times}" '
@@ -237,78 +239,53 @@ def render(grid, targets, out_path):
                     f'</rect>'
                 )
             else:
-                parts.append(f'<rect x="{gx:.1f}" y="{gy:.1f}" width="{CELL}" height="{CELL}" rx="2" fill="{color}"/>')
+                parts.append(f'<rect x="{gx:.1f}" y="{gy:.1f}" width="{CELL}" height="{CELL}" fill="{color}"/>')
 
-    # bin graphic (static)
-    parts.append(
-        f'<g stroke="{CLAW_COLOR}" stroke-width="2" fill="none">'
-        f'<path d="M {bin_x-14} {bin_y} L {bin_x-11} {bin_y+16} L {bin_x+11} {bin_y+16} L {bin_x+14} {bin_y} Z"/>'
-        f'<line x1="{bin_x-16}" y1="{bin_y-3}" x2="{bin_x+16}" y2="{bin_y-3}"/>'
-        f'</g>'
-    )
+    def block(x, y, extra=""):
+        return f'<rect x="{x:.1f}" y="{y:.1f}" width="{U}" height="{U}" fill="{CLAW_COLOR}"{extra}/>'
 
-    parts.append(f'<line x1="0" y1="{RAIL_Y-10}" x2="{grid_w}" y2="{RAIL_Y-10}" '
-                 f'stroke="{RAIL_COLOR}" stroke-width="2" stroke-dasharray="4 3"/>')
+    # bin (static): wide rim, two walls and a base, built from blocks
+    bx, by = round(bin_x / U) * U, round(bin_y / U) * U
+    for i in range(-5, 6):
+        parts.append(block(bx + i * U, by - U))                    # rim
+    for j in range(0, 4):
+        parts.append(block(bx - 4 * U, by + j * U))                # walls
+        parts.append(block(bx + 4 * U, by + j * U))
+    for i in range(-4, 5):
+        parts.append(block(bx + i * U, by + 4 * U))                # base
 
-    # ---- claw: cable, tip circle, two pincer polygons -- all direct-attribute animated ----
+    # rail: dashed pixel line
+    ry = RAIL_Y - 10
+    for x in range(0, int(grid_w), 4 * U):
+        parts.append(f'<rect x="{x}" y="{ry}" width="{2 * U}" height="{U}" fill="{RAIL_COLOR}"/>')
+
+    # ---- claw: cable, housing and two pincers, every block animated with the shared keyTimes ----
     times = ";".join(str(t) for t, *_ in all_waypoints)
-    xs = ";".join(f"{x:.1f}" for _, x, y, c in all_waypoints)
-    ys = ";".join(f"{y:.1f}" for _, x, y, c in all_waypoints)
-
-    def poly_values(local_open, local_closed):
-        frames = []
-        for t, x, y, closed in all_waypoints:
-            pts = local_closed if closed else local_open
-            frames.append(" ".join(f"{x+lx:.1f},{y+ly:.1f}" for lx, ly in pts))
-        return ";".join(frames)
-
-    left_points = poly_values(LEFT_OPEN, LEFT_CLOSED)
-    right_points = poly_values(RIGHT_OPEN, RIGHT_CLOSED)
+    dur = f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"'
     start_x, start_y = all_waypoints[0][1], all_waypoints[0][2]
-    start_left = " ".join(f"{start_x+lx:.1f},{start_y+ly:.1f}" for lx, ly in LEFT_OPEN)
-    start_right = " ".join(f"{start_x+lx:.1f},{start_y+ly:.1f}" for lx, ly in RIGHT_OPEN)
 
-    # cable: vertical line from the fixed rail down to the claw's current position
+    def anim(attr, values):
+        return f'<animate attributeName="{attr}" values="{";".join(values)}" keyTimes="{times}" {dur}/>'
+
+    def moving_block(cells_for, ox, oy):
+        """One animated block. cells_for(closed) -> (col, row) offset for this block in that pose."""
+        xs = [f"{x + cells_for(c)[0] * U + ox:.1f}" for _, x, y, c in all_waypoints]
+        ys = [f"{y + cells_for(c)[1] * U + oy:.1f}" for _, x, y, c in all_waypoints]
+        return (f'<rect x="{xs[0]}" y="{ys[0]}" width="{U}" height="{U}" fill="{CLAW_COLOR}">'
+                f'{anim("x", xs)}{anim("y", ys)}</rect>')
+
+    # cable: a thin pixel column from the rail down to the housing
+    cx = [f"{x - U / 2:.1f}" for _, x, y, c in all_waypoints]
+    cy = [f"{y - 3 * U:.1f}" for _, x, y, c in all_waypoints]
+    ch = [f"{max(y - 3 * U - ry, 0):.1f}" for _, x, y, c in all_waypoints]
     parts.append(
-        f'<line x1="{start_x:.1f}" x2="{start_x:.1f}" y1="{RAIL_Y-10}" y2="{start_y:.1f}" '
-        f'stroke="{CLAW_COLOR}" stroke-width="2">'
-        f'<animate attributeName="x1" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
-        f'repeatCount="indefinite" calcMode="linear"/>'
-        f'<animate attributeName="x2" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
-        f'repeatCount="indefinite" calcMode="linear"/>'
-        f'<animate attributeName="y2" values="{ys}" keyTimes="{times}" dur="{total_dur}s" '
-        f'repeatCount="indefinite" calcMode="linear"/>'
-        f'</line>'
+        f'<rect x="{cx[0]}" y="{ry}" width="{U}" height="{ch[0]}" fill="{CLAW_COLOR}">'
+        f'{anim("x", cx)}{anim("height", ch)}</rect>'
     )
-    # pincers
-    parts.append(
-        f'<polygon points="{start_left}" fill="{CLAW_COLOR}">'
-        f'<animate attributeName="points" values="{left_points}" keyTimes="{times}" '
-        f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
-        f'</polygon>'
-        f'<polygon points="{start_right}" fill="{CLAW_COLOR}">'
-        f'<animate attributeName="points" values="{right_points}" keyTimes="{times}" '
-        f'dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
-        f'</polygon>'
-    )
-    # tip
-    parts.append(
-        f'<circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="3" fill="{CLAW_COLOR}">'
-        f'<animate attributeName="cx" values="{xs}" keyTimes="{times}" dur="{total_dur}s" '
-        f'repeatCount="indefinite" calcMode="linear"/>'
-        f'<animate attributeName="cy" values="{ys}" keyTimes="{times}" dur="{total_dur}s" '
-        f'repeatCount="indefinite" calcMode="linear"/>'
-        f'</circle>'
-    )
-    # small housing bracket above the pincers, for a more "mechanical claw" read
-    parts.append(
-        f'<rect x="{start_x-6:.1f}" y="{start_y-6:.1f}" width="12" height="5" rx="1.5" fill="{CLAW_COLOR}">'
-        f'<animate attributeName="x" values="{";".join(f"{x-6:.1f}" for x in [float(v) for v in xs.split(";")])}" '
-        f'keyTimes="{times}" dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
-        f'<animate attributeName="y" values="{";".join(f"{y-6:.1f}" for y in [float(v) for v in ys.split(";")])}" '
-        f'keyTimes="{times}" dur="{total_dur}s" repeatCount="indefinite" calcMode="linear"/>'
-        f'</rect>'
-    )
+    for dx, dy in HOUSING:
+        parts.append(moving_block(lambda c, dx=dx, dy=dy: (dx, dy), -U / 2, 0))
+    for op, cl in zip(LEFT_OPEN + RIGHT_OPEN, LEFT_CLOSED + RIGHT_CLOSED):
+        parts.append(moving_block(lambda c, op=op, cl=cl: cl if c else op, -U / 2, 0))
 
     parts.append("</svg>")
     with open(out_path, "w") as f:

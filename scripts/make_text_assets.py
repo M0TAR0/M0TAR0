@@ -54,3 +54,70 @@ for theme, fg in THEMES.items():
 </rect>
 </svg>
 ''')
+
+# ---------------------------------------------------------------------------
+# body text: readable lines with a small pixel-art icon each (GitHub can't enlarge Markdown text)
+# ---------------------------------------------------------------------------
+ICONS = {
+    "flag": ["X.........", "XXXXXXXX..", "XXXXXXXXX.", "XXXX..XXX.", "XXXXXXXXX.", "XXXXXXXX..",
+             "X.........", "X.........", "X.........", "X........."],
+    "cap": ["....XX....", "..XXXXXX..", "XXXXXXXXXX", "..XXXXXX.X", "..XXXXXX.X", "...XXXX..X",
+            "........XX", "..........", "..........", ".........."],
+    "candy": ["..........", "..XXXXXX..", "X.XX.XXX.X", "XXXXXXXXXX", "X.XXXX.X.X", "..XXXXXX..",
+              "..........", "..........", "..........", ".........."],
+    "dance": ["....XX....", "...XXXX...", "....XX....", "XX.XXXX.XX", ".XXXXXXXX.", "...XXXX...",
+              "...XXXX...", "...X..X...", "..XX..XX..", ".........."],
+    "code": ["XX........", ".XX.......", "..XX......", "...XX.....", "..XX......", ".XX.......",
+             "XX........", "....XXXXX.", "..........", ".........."],
+}
+BODY = 22          # font size
+BCW = 13           # px per character (Courier is 0.6em)
+PIX = 3            # screen px per icon pixel
+MUTED = {"dark": "#b4b4b4", "light": "#555555"}
+
+
+def pixel_icon(name, x, y, fg):
+    rows = [r for r in ICONS[name] if "X" in r]       # trim blank rows, centre in the 10-row box
+    y += (10 - len(rows)) * PIX // 2
+    out = []
+    for r, row in enumerate(rows):
+        c = 0
+        while c < len(row):
+            if row[c] == "X":
+                c2 = c
+                while c2 + 1 < len(row) and row[c2 + 1] == "X":
+                    c2 += 1
+                out.append(f'<rect x="{x + c * PIX}" y="{y + r * PIX}" width="{(c2 - c + 1) * PIX}" height="{PIX}"/>')
+                c = c2 + 1
+            else:
+                c += 1
+    return f'<g fill="{fg}" shape-rendering="crispEdges">{"".join(out)}</g>'
+
+
+def body_svg(path, icon, lines, theme, color=None, weight="normal", size=BODY, cw=BCW):
+    fg = color or THEMES[theme]
+    lh = size + 14
+    n = max(len(l) for l in lines)
+    w = 30 + 18 + n * cw + 10
+    h = max(len(lines) * lh + 14, 40)
+    iy = (h - 30) // 2
+    texts = "".join(
+        f'<text x="{48}" y="{(h - len(lines) * lh) // 2 + (i + 1) * lh - 10}" font-family="{FONT}" font-size="{size}" '
+        f'font-weight="{weight}" fill="{fg}" textLength="{len(l) * cw}" lengthAdjust="spacing">'
+        f'{l.replace("&", "&amp;")}</text>' for i, l in enumerate(lines))
+    open(path, "w").write(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}">'
+        f'<title>{" ".join(lines).replace("&", "&amp;")}</title>{pixel_icon(icon, 0, iy, fg)}{texts}</svg>')
+
+
+ABOUT = [
+    ("flag", "I'm a Mexican Computer Engineering dancer"),
+    ("cap", "I study at the UNAM"),
+    ("candy", "I like gummies and mints"),
+]
+for theme in THEMES:
+    for i, (icon, line) in enumerate(ABOUT, 1):
+        body_svg(f"assets/about-{i}-{theme}.svg", icon, [line], theme)
+    body_svg(f"assets/about-4-{theme}.svg", "code",
+             ["Crafting software, web projects,", "automation systems & data tools."], theme, weight="bold")
+    body_svg(f"assets/coming-{theme}.svg", "dance", ["Coming soon..."], theme, color=MUTED[theme])
