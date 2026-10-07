@@ -72,7 +72,7 @@ ICONS = {
 }
 BODY = 22          # font size
 BCW = 13           # px per character (Courier is 0.6em)
-PIX = 3            # screen px per icon pixel
+PIX = 2            # screen px per icon pixel
 MUTED = {"dark": "#b4b4b4", "light": "#555555"}
 
 
@@ -96,13 +96,13 @@ def pixel_icon(name, x, y, fg):
 
 def body_svg(path, icon, lines, theme, color=None, weight="normal", size=BODY, cw=BCW):
     fg = color or THEMES[theme]
-    lh = size + 14
+    lh = size + 8
     n = max(len(l) for l in lines)
-    w = 30 + 18 + n * cw + 10
+    w = 10 * PIX + 14 + n * cw + 8
     h = max(len(lines) * lh + 14, 40)
-    iy = (h - 30) // 2
+    iy = (h - 10 * PIX) // 2
     texts = "".join(
-        f'<text x="{48}" y="{(h - len(lines) * lh) // 2 + (i + 1) * lh - 10}" font-family="{FONT}" font-size="{size}" '
+        f'<text x="{10 * PIX + 14}" y="{(h - len(lines) * lh) // 2 + (i + 1) * lh - 10}" font-family="{FONT}" font-size="{size}" '
         f'font-weight="{weight}" fill="{fg}" textLength="{len(l) * cw}" lengthAdjust="spacing">'
         f'{l.replace("&", "&amp;")}</text>' for i, l in enumerate(lines))
     open(path, "w").write(
@@ -112,4 +112,4 @@ def body_svg(path, icon, lines, theme, color=None, weight="normal", size=BODY, c
 
 for theme in THEMES:
     body_svg(f"assets/about-4-{theme}.svg", "code",
-             ["Crafting software, web projects,", "automation systems & data tools."], theme, weight="bold")
+             ["Crafting software, web projects,", "automation systems & data tools."], theme, weight="bold", size=17, cw=10)
