@@ -110,14 +110,6 @@ def body_svg(path, icon, lines, theme, color=None, weight="normal", size=BODY, c
         f'<title>{" ".join(lines).replace("&", "&amp;")}</title>{pixel_icon(icon, 0, iy, fg)}{texts}</svg>')
 
 
-ABOUT = [
-    ("flag", "I'm a Mexican Computer Engineering dancer"),
-    ("cap", "I study at the UNAM"),
-    ("candy", "I like gummies and mints"),
-]
 for theme in THEMES:
-    for i, (icon, line) in enumerate(ABOUT, 1):
-        body_svg(f"assets/about-{i}-{theme}.svg", icon, [line], theme)
     body_svg(f"assets/about-4-{theme}.svg", "code",
              ["Crafting software, web projects,", "automation systems & data tools."], theme, weight="bold")
-    body_svg(f"assets/coming-{theme}.svg", "dance", ["Coming soon..."], theme, color=MUTED[theme])

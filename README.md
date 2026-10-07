@@ -13,9 +13,9 @@
 </h3>
 
 <p align="center">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/about-1-dark.svg" /><img src="assets/about-1-light.svg" alt="I'm a Mexican Computer Engineering dancer" /></picture><br />
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/about-2-dark.svg" /><img src="assets/about-2-light.svg" alt="I study at the UNAM" /></picture><br />
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/about-3-dark.svg" /><img src="assets/about-3-light.svg" alt="I like gummies and mints" /></picture>
+  🇲🇽 I'm a Mexican Computer Engineering dancer 💃<br />
+  🎓 I study at the @UNAM<br />
+  🍬 I like gummies and mints 🍃
 </p>
 
 <p align="center">
@@ -55,7 +55,7 @@
 </h3>
 
 <p align="center">
-  <picture><source media="(prefers-color-scheme: dark)" srcset="assets/coming-dark.svg" /><img src="assets/coming-light.svg" alt="Coming soon" /></picture>
+  <i>Coming soon... 🚧</i>
 </p>
 
 <br />
