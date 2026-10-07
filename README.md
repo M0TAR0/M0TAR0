@@ -20,6 +20,8 @@
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/about-4-dark.svg" /><img src="assets/about-4-light.svg" alt="Crafting software, web projects, automation systems and data tools" /></picture>
 </p>
 
+<br />
+
 <h3 align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/skills-dark.svg" /><img src="assets/headings/skills-light.svg" alt="Languages &amp; Skills" height="34" /></picture>
 </h3>
@@ -44,6 +46,8 @@
   </tr>
 </table>
 
+<br />
+
 <h3 align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/certs-dark.svg" /><img src="assets/headings/certs-light.svg" alt="Certifications" height="34" /></picture>
 </h3>
@@ -52,6 +56,8 @@
   <i>Coming soon... 🚧</i>
 </p>
 
+<br />
+
 <h3 align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/contrib-dark.svg" /><img src="assets/headings/contrib-light.svg" alt="Contributions" height="34" /></picture>
 </h3>
@@ -59,6 +65,8 @@
 <p align="center">
   <img src="claw.svg?ts=37572800750" alt="Claw machine grabbing my contributions" width="100%" />
 </p>
+
+<br />
 
 <h3 align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="assets/headings/contact-dark.svg" /><img src="assets/headings/contact-light.svg" alt="Contact me" height="34" /></picture>

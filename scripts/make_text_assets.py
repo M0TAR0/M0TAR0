@@ -112,4 +112,4 @@ def body_svg(path, icon, lines, theme, color=None, weight="normal", size=BODY, c
 
 for theme in THEMES:
     body_svg(f"assets/about-4-{theme}.svg", "code",
-             ["Crafting software, web projects,", "automation systems & data tools."], theme, weight="bold", size=17, cw=10)
+             ["Crafting software, web projects,", "automation systems & data tools."], theme, weight="bold", size=15, cw=9)
