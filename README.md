@@ -63,7 +63,7 @@
 </h3>
 
 <p align="center">
-  <img src="claw.svg?ts=45223990643" alt="Claw machine grabbing my contributions" width="100%" />
+  <img src="claw.svg?ts=45441875154" alt="Claw machine grabbing my contributions" width="100%" />
 </p>
 
 <br />
